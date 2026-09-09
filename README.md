@@ -27,11 +27,13 @@ $ tunemeta info "https://music.apple.com/us/song/baby-one-more-time-from-kung-fu
 
 ## Install
 
+Not on PyPI yet — install straight from GitHub:
+
 ```
-pip install tunemeta
+pip install git+https://github.com/AbhyasKanaujia/tunemeta.git
 ```
 
-Or from source:
+Or from a local clone:
 
 ```
 git clone https://github.com/AbhyasKanaujia/tunemeta.git
