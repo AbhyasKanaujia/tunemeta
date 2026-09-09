@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tunemeta"
+version = "0.1.0"
+description = "Look up clean, accurate ID3 metadata and cover art for a song and write it straight into your MP3s."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Abhyas Kanaujia" }]
+keywords = ["id3", "mp3", "metadata", "tags", "itunes", "music", "cli"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Sound/Audio",
+]
+dependencies = [
+    "mutagen>=1.47",
+    "Pillow>=10.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/AbhyasKanaujia/tunemeta"
+Issues = "https://github.com/AbhyasKanaujia/tunemeta/issues"
+
+[project.scripts]
+tunemeta = "tunemeta.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tunemeta"]
