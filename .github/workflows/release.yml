@@ -13,6 +13,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - run: brew install create-dmg
       - run: pip install -e ".[gui,build]"
       - run: bash packaging/build_macos.sh
       - run: mv dist/tunemeta.dmg dist/tunemeta-macos.dmg
