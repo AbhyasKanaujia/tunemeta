@@ -41,6 +41,21 @@ cd tunemeta
 pip install -e .
 ```
 
+## Desktop App
+
+Prefer a UI over the CLI? Download the app for your platform from the
+[latest release](https://github.com/AbhyasKanaujia/tunemeta/releases/latest):
+
+- **macOS** — `tunemeta-macos.dmg`
+- **Windows** — `tunemeta-windows.exe`
+- **Linux** — `tunemeta-linux` (needs GTK3 + WebKit2GTK, already installed on
+  most desktop distros; `chmod +x` it before running)
+
+Same idea as the CLI's `tag` command: pick an MP3, search, review the
+fields, write. No install step, no Python required.
+
+To run it from source instead: `pip install -e ".[gui]"` then `tunemeta-gui`.
+
 ## Usage
 
 **Print cleaned-up metadata as JSON:**
@@ -84,6 +99,7 @@ or tagging code. Only one ships today:
 ## Roadmap
 
 - [x] iTunes provider
+- [x] Desktop app (macOS/Windows/Linux)
 - [ ] MusicBrainz + Cover Art Archive provider (fully open, no API key)
 - [ ] Deezer provider
 - [ ] Last.fm provider (genre/tag data)
