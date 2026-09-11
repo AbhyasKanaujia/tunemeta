@@ -7,6 +7,10 @@
 # (GNOME/Ubuntu/Fedora Workstation); on a minimal system, install it first:
 #   Debian/Ubuntu: sudo apt install python3-gi gir1.2-webkit2-4.1
 #   Fedora:        sudo dnf install python3-gobject webkit2gtk4.1
+#
+# No file-manager icon here -- ELF binaries don't embed one the way .app/.exe
+# do (that needs a .desktop file, out of scope for a portable binary). The
+# window/taskbar icon while it's running still comes through via GTK.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -16,6 +20,7 @@ pyinstaller \
   --onefile \
   --windowed \
   --name tunemeta \
+  --add-data "$ROOT_DIR/src/tunemeta/assets:assets" \
   --noconfirm \
   --distpath dist \
   --workpath build \

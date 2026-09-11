@@ -9,6 +9,8 @@ cd "$ROOT_DIR"
 pyinstaller \
   --windowed \
   --name tunemeta \
+  --icon "$ROOT_DIR/src/tunemeta/assets/icon.icns" \
+  --add-data "$ROOT_DIR/src/tunemeta/assets:assets" \
   --noconfirm \
   --distpath dist \
   --workpath build \

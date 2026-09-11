@@ -9,6 +9,8 @@ pyinstaller `
   --onefile `
   --windowed `
   --name tunemeta `
+  --icon "$RootDir/src/tunemeta/assets/icon.ico" `
+  --add-data "$RootDir/src/tunemeta/assets;assets" `
   --noconfirm `
   --distpath dist `
   --workpath build `

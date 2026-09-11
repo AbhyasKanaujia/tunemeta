@@ -18,6 +18,7 @@ import base64
 import io
 import json
 import os
+import sys
 from dataclasses import replace
 
 import webview
@@ -462,13 +463,28 @@ class Api:
             return {"ok": False, "error": str(exc)}
 
 
+def _asset_path(filename: str) -> str:
+    """Path to a bundled asset -- PyInstaller extracts --add-data into
+    sys._MEIPASS at runtime; in dev mode it's just next to this file."""
+    base = getattr(sys, "_MEIPASS", os.path.join(os.path.dirname(__file__), "assets"))
+    if hasattr(sys, "_MEIPASS"):
+        base = os.path.join(base, "assets")
+    return os.path.join(base, filename)
+
+
+def _icon_path() -> str:
+    """Window/dock/taskbar icon. Windows' native Icon type only loads .ico;
+    macOS (NSImage) and Linux (GTK) are both happy with a plain .png."""
+    return _asset_path("icon.ico" if sys.platform == "win32" else "icon.png")
+
+
 def main() -> None:
     api = Api()
     window = webview.create_window(
         "tunemeta", html=_render_page(), js_api=api, width=680, height=720, min_size=(560, 480)
     )
     api.window = window
-    webview.start()
+    webview.start(icon=_icon_path())
 
 
 if __name__ == "__main__":
