@@ -29,9 +29,12 @@ Issues = "https://github.com/AbhyasKanaujia/tunemeta/issues"
 
 [project.scripts]
 tunemeta = "tunemeta.cli:main"
+tunemeta-gui = "tunemeta.gui:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0"]
+gui = ["pywebview>=5.0"]
+build = ["pyinstaller>=6.10"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tunemeta"]

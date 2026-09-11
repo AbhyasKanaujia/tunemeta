@@ -1,7 +1,7 @@
 from mutagen.id3 import ID3
 
 from tunemeta.models import TrackMetadata
-from tunemeta.tagging import write_tags
+from tunemeta.tagging import read_tags, write_tags
 
 
 def test_write_tags_sets_expected_frames(tmp_path):
@@ -61,3 +61,40 @@ def test_write_tags_preserves_unrelated_existing_frames(tmp_path):
     tags = ID3(str(mp3_path))
     assert tags["TIT2"].text == ["New Title"]
     assert tags["TCOM"].text == ["Max Martin"]
+
+
+def test_read_tags_returns_empty_dict_when_untagged(tmp_path):
+    mp3_path = tmp_path / "song.mp3"
+    mp3_path.write_bytes(b"")
+
+    assert read_tags(str(mp3_path)) == {}
+
+
+def test_read_tags_reflects_what_write_tags_wrote(tmp_path):
+    mp3_path = tmp_path / "song.mp3"
+    mp3_path.write_bytes(b"")
+
+    metadata = TrackMetadata(
+        title="Faasle",
+        artist="Aditya Rikhari",
+        album="Faasle - Single",
+        album_artist="Aditya Rikhari",
+        genre="Indian",
+        year=2021,
+        track_number=1,
+        track_total=1,
+        disc_number=1,
+        disc_total=1,
+    )
+    write_tags(str(mp3_path), metadata)
+
+    assert read_tags(str(mp3_path)) == {
+        "title": "Faasle",
+        "artist": "Aditya Rikhari",
+        "album": "Faasle - Single",
+        "album_artist": "Aditya Rikhari",
+        "genre": "Indian",
+        "year": "2021",
+        "track_number": "1",
+        "disc_number": "1",
+    }

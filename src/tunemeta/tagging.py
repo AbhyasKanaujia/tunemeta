@@ -55,3 +55,52 @@ def write_tags(path: str, metadata: TrackMetadata, artwork_jpeg: bytes | None = 
         )
 
     tags.save(path, v2_version=3)
+
+
+def read_tags(path: str) -> dict:
+    """Read the ID3 tags currently on a file, for display only.
+
+    Mirrors the frames write_tags() writes (TIT2/TPE1/TALB/TPE2/TCON/TDRC/
+    TRCK/TPOS) so "current tags" reflects exactly what this tool would
+    overwrite. Frames that aren't present are simply absent from the result.
+    """
+    try:
+        tags = ID3(path)
+    except ID3NoHeaderError:
+        return {}
+
+    def text(frame_id: str) -> str | None:
+        frame = tags.get(frame_id)
+        return str(frame.text[0]) if frame and frame.text else None
+
+    simple_frames = (
+        ("TIT2", "title"),
+        ("TPE1", "artist"),
+        ("TALB", "album"),
+        ("TPE2", "album_artist"),
+        ("TCON", "genre"),
+    )
+    result: dict[str, str] = {}
+    for frame_id, key in simple_frames:
+        value = text(frame_id)
+        if value is not None:
+            result[key] = value
+    if (value := text("TDRC")) is not None:
+        result["year"] = value.split("-")[0]
+    if (value := text("TRCK")) is not None:
+        result["track_number"] = value.split("/")[0]
+    if (value := text("TPOS")) is not None:
+        result["disc_number"] = value.split("/")[0]
+    return result
+
+
+def read_artwork(path: str) -> tuple[bytes, str] | None:
+    """Read the cover art currently embedded on a file, if any."""
+    try:
+        tags = ID3(path)
+    except ID3NoHeaderError:
+        return None
+    frames = tags.getall("APIC")
+    if not frames:
+        return None
+    return frames[0].data, frames[0].mime or "image/jpeg"
