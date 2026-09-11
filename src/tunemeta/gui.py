@@ -1,10 +1,15 @@
-"""Minimal desktop UI for tunemeta: pick a file, look up a track, write the tags.
+"""Desktop UI for tunemeta: pick a file, look up a track, write the tags.
 
 Built on pywebview: a native OS window (WKWebView on macOS, WebView2 on
 Windows, WebKitGTK on Linux) rendering plain HTML/CSS/JS, bridged to Python
 via `js_api`. No bundled browser engine (unlike Electron), a real native
 file-open dialog (unlike a page running in a system browser tab), and it
 freezes cleanly with PyInstaller into a single EXE/app per platform.
+
+The window chrome (title bar, borders, minimize/close, dragging, resizing)
+is native OS window -- simple and predictable. Only the *content* inside is
+themed with XP.css (https://botoxparty.github.io/XP.css/), a faithful
+recreation of the Windows XP Luna theme, for the fieldset/button/input look.
 
 Three steps, always in that order: choose a file, look up a track, review
 and write. All lookup/tagging logic stays in the existing provider/artwork/
@@ -51,100 +56,77 @@ PAGE_HTML = """<!doctype html>
 <meta charset="utf-8">
 <title>tunemeta</title>
 <style>
-  :root { color-scheme: light dark; }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    margin: 0; padding: 28px 24px; color: #1d1d1f; background: #fff;
-    overflow-y: auto;
-  }
-  @media (prefers-color-scheme: dark) { body { color: #f2f2f2; background: #1c1c1e; } }
-  h1 { font-size: 18px; font-weight: 600; margin: 0 0 20px; }
-  label { display: block; font-size: 12px; color: #86868b; margin-bottom: 4px; }
-  input, select {
-    width: 100%; height: 38px; padding: 0 10px; font-size: 14px; border-radius: 8px;
-    border: 1px solid #d2d2d7; background: transparent; color: inherit;
-    -webkit-appearance: none; appearance: none;
-  }
-  @media (prefers-color-scheme: dark) { input, select { border-color: #48484a; } }
-  select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 8px center; background-size: 14px;
-    padding-right: 28px;
-  }
-  .row { display: flex; gap: 10px; align-items: flex-end; }
-  .row > div { flex: 1; }
-  button {
-    padding: 9px 16px; font-size: 14px; font-weight: 500; border-radius: 8px;
-    border: none; background: #0071e3; color: #fff; cursor: pointer; white-space: nowrap;
-  }
-  button:disabled { background: #a1a1a6; cursor: default; }
-  button.link {
-    background: none; color: #0071e3; padding: 0; font-size: 13px; font-weight: 400;
-    text-decoration: underline;
-  }
-  .hide { display: none !important; }
-  .lineinfo { font-size: 13px; color: #86868b; margin: 0 0 16px; display: flex; gap: 8px; align-items: center; }
-  #fileLine { word-break: break-all; }
-  .card {
-    display: flex; gap: 14px; align-items: flex-start; padding: 12px 16px;
-    border-radius: 12px; background: rgba(0, 0, 0, 0.035); border: 1px solid #e2e2e7;
-    margin-bottom: 18px;
-  }
-  @media (prefers-color-scheme: dark) { .card { background: rgba(255, 255, 255, 0.05); border-color: #3a3a3c; } }
-  .artCol { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
-  .artCaption { font-size: 10px; color: #a1a1a6; text-align: center; }
-  #currentArtwork {
-    width: 56px; height: 56px; object-fit: cover; border-radius: 8px; background: #e8e8ed;
-    visibility: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  }
-  .cardText { min-width: 0; }
-  .cardTitle { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .cardSubtitle { font-size: 13px; color: #6e6e73; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  @media (prefers-color-scheme: dark) { .cardSubtitle { color: #a1a1a6; } }
-  .cardMeta { font-size: 11px; color: #a1a1a6; margin-top: 4px; letter-spacing: .2px; }
-  .hint { color: #86868b; margin: 0 0 16px; }
-  .center { text-align: center; padding: 30px 0; }
-  #stepSearch { margin-bottom: 20px; }
-  #stepReview { padding-top: 16px; border-top: 1px solid #d2d2d7; }
-  @media (prefers-color-scheme: dark) { #stepReview { border-color: #48484a; } }
-  #preview { display: flex; gap: 20px; margin-bottom: 16px; }
-  #artwork { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; background: #e8e8ed; visibility: hidden; }
-  #fields { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; align-content: start; }
-  .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-  #status { font-size: 13px; color: #86868b; }
+__XP_CSS__
+
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-size: 12px; background: #ece9d8; box-sizing: border-box;
+  display: flex; flex-direction: column; min-height: 100vh; padding: 10px;
+}
+.hide { display: none !important; }
+
+#content { flex: 1 1 auto; }
+
+.lineinfo { font-size: 11px; margin: 0 0 8px; word-break: break-all; }
+.stepCenter { text-align: center; padding: 20px 0; }
+
+.tagsRow { display: flex; gap: 12px; align-items: flex-start; }
+.cardText { min-width: 0; }
+#currentTitle { font-weight: bold; }
+.artCol { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
+.artCaption { font-size: 10px; color: #444; text-align: center; }
+
+#currentArtwork, #artwork {
+  object-fit: cover; background: #fff; visibility: hidden;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf;
+}
+#currentArtwork { width: 48px; height: 48px; }
+#artwork { width: 90px; height: 90px; }
+
+#preview { display: flex; gap: 14px; margin-bottom: 10px; }
+#fields { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+
+.status-bar { flex: none; margin-top: 8px; }
 </style>
 </head>
 <body>
+<div id="content">
 <p id="fileLine" class="lineinfo hide"></p>
-<div id="currentTagsRow" class="card hide">
-  <div class="artCol">
-    <img id="currentArtwork" alt="">
-    <div id="currentArtworkCaption" class="artCaption"></div>
-  </div>
-  <div class="cardText">
-    <div id="currentTitle" class="cardTitle"></div>
-    <div id="currentSubtitle" class="cardSubtitle"></div>
-    <div id="currentMeta" class="cardMeta"></div>
-  </div>
-</div>
 
-<section id="stepFile" class="center">
-  <p class="hint">Choose an MP3 file to tag.</p>
-  <button id="browseBtn" disabled>Choose File…</button>
+<fieldset id="currentTagsBox" class="hide">
+  <legend>Current Tags</legend>
+  <div class="tagsRow">
+    <div class="artCol">
+      <img id="currentArtwork" alt="">
+      <div id="currentArtworkCaption" class="artCaption"></div>
+    </div>
+    <div class="cardText">
+      <div id="currentTitle"></div>
+      <div id="currentSubtitle"></div>
+      <div id="currentMeta"></div>
+    </div>
+  </div>
+</fieldset>
+
+<section id="stepFile" class="stepCenter">
+  <p>Choose an MP3 file to tag.</p>
+  <button id="browseBtn" disabled>Choose File&hellip;</button>
 </section>
 
-<section id="stepSearch" class="hide">
-  <label>Search</label>
-  <div class="row">
-    <input id="identifier" placeholder="Song title, artist, or a music link">
-    <div style="flex: 0 0 110px;"><select id="provider"></select></div>
+<fieldset id="stepSearch" class="hide">
+  <legend>Search</legend>
+  <div class="field-row-stacked">
+    <label for="identifier">Song title, artist, or a music link</label>
+    <input id="identifier" type="text">
+  </div>
+  <div class="field-row" style="justify-content: space-between; margin-top: 8px;">
+    <select id="provider"></select>
     <button id="lookupBtn">Search</button>
   </div>
-</section>
+</fieldset>
 
-<section id="stepReview" class="hide">
+<fieldset id="stepReview" class="hide">
+  <legend>Track Info</legend>
   <div id="preview">
     <div class="artCol">
       <img id="artwork" alt="">
@@ -152,11 +134,15 @@ PAGE_HTML = """<!doctype html>
     </div>
     <div id="fields"></div>
   </div>
-  <div class="actions">
-    <span id="status"></span>
+  <div class="field-row" style="justify-content: flex-end;">
     <button id="tagBtn">Write Tags</button>
   </div>
-</section>
+</fieldset>
+</div>
+
+<div class="status-bar">
+  <p class="status-bar-field" id="status">Ready</p>
+</div>
 
 <script>
 const FIELDS = __FIELDS_JSON__;
@@ -178,9 +164,12 @@ const inputs = {};
 const fieldsEl = el('fields');
 for (const [key, label] of FIELDS) {
   const wrap = document.createElement('div');
+  wrap.className = 'field-row-stacked';
   const lbl = document.createElement('label');
   lbl.textContent = label;
+  lbl.htmlFor = 'field-' + key;
   const inp = document.createElement('input');
+  inp.type = 'text';
   inp.id = 'field-' + key;
   inputs[key] = inp;
   wrap.append(lbl, inp);
@@ -209,10 +198,10 @@ function setImage(imgEl, dataUrl) {
 function renderFileLine(fileSize) {
   el('fileLine').textContent = '';
   const span = document.createElement('span');
-  span.textContent = '🎵 ' + state.path + (fileSize ? ' · ' + fileSize : '');
+  span.textContent = state.path + (fileSize ? ' · ' + fileSize : '');
   const change = document.createElement('button');
-  change.className = 'link';
   change.textContent = 'Change';
+  change.style.marginLeft = '8px';
   change.addEventListener('click', backToFileStep);
   el('fileLine').append(span, change);
   show('fileLine');
@@ -222,7 +211,7 @@ function renderCurrentInfo(tags, artworkDataUrl, artworkDimensions) {
   setImage(el('currentArtwork'), artworkDataUrl);
   el('currentArtworkCaption').textContent = artworkDimensions || '';
 
-  if (Object.keys(tags).length === 0 && !artworkDataUrl) { hide('currentTagsRow'); return; }
+  if (Object.keys(tags).length === 0 && !artworkDataUrl) { hide('currentTagsBox'); return; }
 
   el('currentTitle').textContent = tags.title || 'No title tag';
   el('currentSubtitle').textContent = [tags.artist, tags.album].filter(Boolean).join(' — ');
@@ -234,13 +223,13 @@ function renderCurrentInfo(tags, artworkDataUrl, artworkDimensions) {
   if (tags.disc_number) metaParts.push('Disc ' + tags.disc_number);
   el('currentMeta').textContent = metaParts.join(' · ');
 
-  show('currentTagsRow');
+  show('currentTagsBox');
 }
 
 function backToFileStep() {
   state.path = '';
   hide('fileLine');
-  hide('currentTagsRow');
+  hide('currentTagsBox');
   hide('stepSearch');
   hide('stepReview');
   show('stepFile');
@@ -305,9 +294,26 @@ tagBtn.addEventListener('click', async () => {
 """
 
 
+def _asset_path(filename: str) -> str:
+    """Path to a bundled asset -- PyInstaller extracts --add-data into
+    sys._MEIPASS at runtime; in dev mode it's just next to this file."""
+    base = getattr(sys, "_MEIPASS", os.path.join(os.path.dirname(__file__), "assets"))
+    if hasattr(sys, "_MEIPASS"):
+        base = os.path.join(base, "assets")
+    return os.path.join(base, filename)
+
+
+def _to_data_url(data: bytes, mime: str) -> str:
+    return f"data:{mime};base64," + base64.b64encode(data).decode("ascii")
+
+
 def _render_page() -> str:
+    with open(_asset_path("xp.css"), encoding="utf-8") as f:
+        xp_css = f.read()
+
     return (
-        PAGE_HTML.replace("__FIELDS_JSON__", json.dumps(EDITABLE_FIELDS))
+        PAGE_HTML.replace("__XP_CSS__", xp_css)
+        .replace("__FIELDS_JSON__", json.dumps(EDITABLE_FIELDS))
         .replace("__PROVIDERS_JSON__", json.dumps(sorted(PROVIDERS)))
         .replace("__DEFAULT_PROVIDER__", DEFAULT_PROVIDER)
     )
@@ -349,10 +355,6 @@ def _fields_to_overrides(fields: dict) -> dict:
         raw = str(fields.get(key, ""))
         overrides[key] = _parse_int(raw, label) if key in _INT_FIELDS else (raw.strip() or None)
     return overrides
-
-
-def _to_data_url(data: bytes, mime: str) -> str:
-    return f"data:{mime};base64," + base64.b64encode(data).decode("ascii")
 
 
 def _format_size(num_bytes: int) -> str:
@@ -463,15 +465,6 @@ class Api:
             return {"ok": False, "error": str(exc)}
 
 
-def _asset_path(filename: str) -> str:
-    """Path to a bundled asset -- PyInstaller extracts --add-data into
-    sys._MEIPASS at runtime; in dev mode it's just next to this file."""
-    base = getattr(sys, "_MEIPASS", os.path.join(os.path.dirname(__file__), "assets"))
-    if hasattr(sys, "_MEIPASS"):
-        base = os.path.join(base, "assets")
-    return os.path.join(base, filename)
-
-
 def _icon_path() -> str:
     """Window/dock/taskbar icon. Windows' native Icon type only loads .ico;
     macOS (NSImage) and Linux (GTK) are both happy with a plain .png."""
@@ -481,7 +474,7 @@ def _icon_path() -> str:
 def main() -> None:
     api = Api()
     window = webview.create_window(
-        "tunemeta", html=_render_page(), js_api=api, width=680, height=720, min_size=(560, 480)
+        "tunemeta", html=_render_page(), js_api=api, width=680, height=680, min_size=(560, 480)
     )
     api.window = window
     webview.start(icon=_icon_path())
