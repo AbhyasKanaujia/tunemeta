@@ -12,13 +12,13 @@ oversized cover art). `tunemeta` looks the track up against a real catalog
 and fixes it in one command.
 
 ```
-$ tunemeta info "https://music.apple.com/us/song/baby-one-more-time-from-kung-fu-panda-4/1732596519"
+$ tunemeta info "https://music.apple.com/us/song/example-track/000000000"
 {
-  "title": "...Baby One More Time (from Kung Fu Panda 4)",
-  "artist": "Tenacious D",
-  "album": "Kung Fu Panda 4 (Original Motion Picture Soundtrack)",
-  "album_artist": "Hans Zimmer & Steve Mazzaro",
-  "genre": "Soundtrack",
+  "title": "Example Track",
+  "artist": "Example Artist",
+  "album": "Example Album",
+  "album_artist": "Example Artist",
+  "genre": "Pop",
   "year": 2024,
   ...
   "artwork_url": "https://.../1000x1000bb.jpg"

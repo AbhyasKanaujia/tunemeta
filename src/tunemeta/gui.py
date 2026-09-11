@@ -84,7 +84,8 @@ body {
 #artwork { width: 90px; height: 90px; }
 
 #preview { display: flex; gap: 14px; margin-bottom: 10px; }
-#fields { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+#fields { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; align-items: start; }
+#fields .field-row-stacked { margin-top: 0; }
 
 .status-bar { flex: none; margin-top: 8px; }
 </style>
