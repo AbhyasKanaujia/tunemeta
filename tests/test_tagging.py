@@ -1,7 +1,7 @@
 from mutagen.id3 import ID3
 
 from tunemeta.models import TrackMetadata
-from tunemeta.tagging import read_tags, write_tags
+from tunemeta.tagging import read_tags, sensible_filename, write_tags
 
 
 def test_write_tags_sets_expected_frames(tmp_path):
@@ -98,3 +98,19 @@ def test_read_tags_reflects_what_write_tags_wrote(tmp_path):
         "track_number": "1",
         "disc_number": "1",
     }
+
+
+def test_sensible_filename_combines_artist_and_title():
+    metadata = TrackMetadata(title="Faasle", artist="Aditya Rikhari")
+    assert sensible_filename(metadata, ".mp3") == "Aditya Rikhari - Faasle.mp3"
+
+
+def test_sensible_filename_falls_back_to_whatever_is_present():
+    assert sensible_filename(TrackMetadata(title="Faasle"), ".mp3") == "Faasle.mp3"
+    assert sensible_filename(TrackMetadata(artist="Aditya Rikhari"), ".mp3") == "Aditya Rikhari.mp3"
+    assert sensible_filename(TrackMetadata(), ".mp3") == "Untitled.mp3"
+
+
+def test_sensible_filename_strips_invalid_characters():
+    metadata = TrackMetadata(title="Why? / How.", artist="AC/DC")
+    assert sensible_filename(metadata, ".mp3") == "ACDC - Why How.mp3"

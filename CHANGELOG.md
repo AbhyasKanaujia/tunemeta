@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-09-12
+
+### Added
+- A "Rename file to match tags" checkbox in the review step, checked by
+  default. Writing tags renames the file to "Artist - Title.mp3" using
+  the tags just written; leave it unchecked to keep the original
+  filename.
+
 ## [1.0.1] - 2026-09-12
 
 ### Added

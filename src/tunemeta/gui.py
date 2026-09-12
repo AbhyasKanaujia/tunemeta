@@ -149,7 +149,11 @@ body {
     </div>
     <div id="fields"></div>
   </div>
-  <div class="field-row" style="justify-content: flex-end;">
+  <div class="field-row" style="justify-content: space-between;">
+    <div class="field-row">
+      <input type="checkbox" id="renameCheck" checked>
+      <label for="renameCheck">Rename file to match tags</label>
+    </div>
     <button id="tagBtn">Write Tags</button>
   </div>
 </fieldset>
@@ -233,10 +237,10 @@ function setImage(imgEl, dataUrl) {
   }
 }
 
-function renderFileLine(fileSize) {
+function renderFileLine() {
   el('fileLine').textContent = '';
   const span = document.createElement('span');
-  span.textContent = state.path + (fileSize ? ' · ' + fileSize : '');
+  span.textContent = state.path + (state.fileSize ? ' · ' + state.fileSize : '');
   const change = document.createElement('button');
   change.textContent = 'Change';
   change.style.marginLeft = '8px';
@@ -266,6 +270,7 @@ function renderCurrentInfo(tags, artworkDataUrl, artworkDimensions) {
 
 function backToFileStep() {
   state.path = '';
+  state.fileSize = '';
   hide('fileLine');
   hide('currentTagsBox');
   hide('stepSearch');
@@ -306,8 +311,9 @@ browseBtn.addEventListener('click', async () => {
   const result = await window.pywebview.api.browse_file();
   if (!result) return;
   state.path = result.path;
+  state.fileSize = result.file_size;
   identifierInput.value = result.guess || '';
-  renderFileLine(result.file_size);
+  renderFileLine();
   renderCurrentInfo(result.current_tags || {}, result.current_artwork_data_url, result.artwork_dimensions);
   hide('stepFile');
   show('stepSearch');
@@ -341,7 +347,7 @@ tagBtn.addEventListener('click', async () => {
   tagBtn.disabled = true;
   tagBtn.textContent = 'Writing…';
   statusEl.textContent = 'Writing tags…';
-  const data = await window.pywebview.api.tag(state.path, fields);
+  const data = await window.pywebview.api.tag(state.path, fields, el('renameCheck').checked);
   tagBtn.disabled = false;
   tagBtn.textContent = 'Write Tags';
   if (!data.ok) {
@@ -349,7 +355,13 @@ tagBtn.addEventListener('click', async () => {
     alert(data.error);
     return;
   }
-  statusEl.textContent = 'Tags written.';
+  if (data.path !== state.path) {
+    state.path = data.path;
+    renderFileLine();
+  }
+  statusEl.textContent = data.rename_error
+    ? `Tags written, but couldn't rename the file: ${data.rename_error}`
+    : 'Tags written.';
 });
 </script>
 </body>
@@ -461,6 +473,23 @@ def _new_artwork_info(artwork_jpeg: bytes | None) -> tuple[str | None, str | Non
     return _to_data_url(artwork_jpeg, "image/jpeg"), _format_size(len(artwork_jpeg)), _image_dimensions(artwork_jpeg)
 
 
+def _rename_to_match_tags(mp3_path: str, metadata: TrackMetadata) -> str:
+    """Rename the file in place to "Artist - Title.mp3", based on the tags
+    just written. Refuses to clobber an unrelated file that already has
+    that name; leaves the file where it is in that case."""
+    directory, filename = os.path.split(mp3_path)
+    extension = os.path.splitext(filename)[1]
+    new_name = tagging.sensible_filename(metadata, extension)
+    if new_name == filename:
+        return mp3_path
+
+    new_path = os.path.join(directory, new_name)
+    if os.path.exists(new_path):
+        raise ValueError(f'a file named "{new_name}" already exists.')
+    os.rename(mp3_path, new_path)
+    return new_path
+
+
 def _version_tuple(version: str) -> tuple[int, ...]:
     parts = []
     for piece in version.split("."):
@@ -542,7 +571,7 @@ class Api:
         except Exception as exc:  # surfaced to the UI, not a stack trace
             return {"ok": False, "error": str(exc)}
 
-    def tag(self, mp3_path: str, fields: dict) -> dict:
+    def tag(self, mp3_path: str, fields: dict, rename: bool = False) -> dict:
         try:
             mp3_path = (mp3_path or "").strip()
             if not mp3_path:
@@ -551,7 +580,15 @@ class Api:
                 raise ValueError("Look up a track first.")
             metadata = replace(self._metadata, **_fields_to_overrides(fields))
             tagging.write_tags(mp3_path, metadata, self._artwork_jpeg)
-            return {"ok": True}
+
+            new_path, rename_error = mp3_path, None
+            if rename:
+                try:
+                    new_path = _rename_to_match_tags(mp3_path, metadata)
+                except ValueError as exc:
+                    rename_error = str(exc)
+
+            return {"ok": True, "path": new_path, "rename_error": rename_error}
         except Exception as exc:  # surfaced to the UI, not a stack trace
             return {"ok": False, "error": str(exc)}
 

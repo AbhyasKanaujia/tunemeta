@@ -4,6 +4,17 @@ Technical/internal notes on how this project has been built — not a
 user-facing changelog. See [CHANGELOG.md](CHANGELOG.md) for what's new
 from a user's perspective.
 
+## 2026-09-12 (2)
+
+- Added the rename-on-write checkbox and `tagging.sensible_filename()`.
+  First pass nested the checkbox `<input>` inside its `<label>`, which
+  broke XP.css: its checkbox skin hides the real input
+  (`opacity:0; position:fixed`) and draws the box/checkmark via the
+  label's `:before`/`:after`, matched with an adjacent-sibling selector
+  (`input[type=checkbox]+label`) that only fires when the two are
+  siblings, not parent/child. Fixed by placing them as siblings inside a
+  `.field-row`, per XP.css's own convention.
+
 ## 2026-09-12
 
 - Fixed the Track Info field misalignment: XP.css's `.field-row-stacked

@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import re
+
 from mutagen.id3 import APIC, ID3, ID3NoHeaderError, TALB, TCON, TDRC, TIT2, TPE1, TPE2, TPOS, TRCK
 
 from tunemeta.models import TrackMetadata
+
+_INVALID_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
 
 def write_tags(path: str, metadata: TrackMetadata, artwork_jpeg: bytes | None = None) -> None:
@@ -92,6 +96,20 @@ def read_tags(path: str) -> dict:
     if (value := text("TPOS")) is not None:
         result["disc_number"] = value.split("/")[0]
     return result
+
+
+def sensible_filename(metadata: TrackMetadata, extension: str) -> str:
+    """Build an "Artist - Title<extension>" filename from metadata.
+
+    Falls back to whichever of artist/title is present, or "Untitled" if
+    neither is. Characters invalid in filenames on Windows/macOS/Linux are
+    stripped rather than replaced, to keep the result readable.
+    """
+    parts = [part for part in (metadata.artist, metadata.title) if part]
+    name = " - ".join(parts) if parts else "Untitled"
+    name = _INVALID_FILENAME_CHARS.sub("", name)
+    name = re.sub(r"\s+", " ", name).strip(" .") or "Untitled"
+    return f"{name}{extension}"
 
 
 def read_artwork(path: str) -> tuple[bytes, str] | None:

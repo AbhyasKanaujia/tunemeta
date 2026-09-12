@@ -18,6 +18,7 @@
   It's user-facing ("what's new"), not a dev log — no internal/technical
   details (bug root causes, CI fixes, refactors). Put those in `DEVLOG.md`
   instead.
+- Don't try to take screenshots ot automate UI testing with throwaway scripts, ask user to validate by providing a manual test. Just resart the app so that your changes take effect.
 
 ## Using the CLI to fix a file's tags
 
