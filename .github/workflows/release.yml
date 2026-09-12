@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+env:
+  # Falls back to "dev" for workflow_dispatch runs, which have no release tag.
+  VERSION: ${{ github.event.release.tag_name || 'dev' }}
+
 jobs:
   macos:
     runs-on: macos-latest
@@ -19,13 +23,13 @@ jobs:
       - run: brew install create-dmg
       - run: pip install -e ".[gui,build]"
       - run: bash packaging/build_macos.sh
-      - run: mv dist/tunemeta.dmg dist/tunemeta-macos.dmg
+      - run: mv dist/tunemeta.dmg dist/tunemeta-${{ env.VERSION }}-macos.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: tunemeta-macos
-          path: dist/tunemeta-macos.dmg
+          path: dist/tunemeta-${{ env.VERSION }}-macos.dmg
       - if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-macos.dmg
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-${{ env.VERSION }}-macos.dmg
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -38,13 +42,13 @@ jobs:
           python-version: "3.11"
       - run: pip install -e ".[gui,build]"
       - run: powershell -ExecutionPolicy Bypass -File packaging/build_windows.ps1
-      - run: move dist\tunemeta.exe dist\tunemeta-windows.exe
+      - run: move dist\tunemeta.exe dist\tunemeta-${{ env.VERSION }}-windows.exe
       - uses: actions/upload-artifact@v4
         with:
           name: tunemeta-windows
-          path: dist/tunemeta-windows.exe
+          path: dist/tunemeta-${{ env.VERSION }}-windows.exe
       - if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-windows.exe
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-${{ env.VERSION }}-windows.exe
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -62,12 +66,12 @@ jobs:
             libgirepository1.0-dev libcairo2-dev pkg-config python3-dev gcc
       - run: pip install -e ".[gui,build]" "pywebview[gtk]"
       - run: bash packaging/build_linux.sh
-      - run: mv dist/tunemeta dist/tunemeta-linux
+      - run: mv dist/tunemeta dist/tunemeta-${{ env.VERSION }}-linux
       - uses: actions/upload-artifact@v4
         with:
           name: tunemeta-linux
-          path: dist/tunemeta-linux
+          path: dist/tunemeta-${{ env.VERSION }}-linux
       - if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-linux
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-${{ env.VERSION }}-linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -14,6 +14,11 @@ from a user's perspective.
   (`input[type=checkbox]+label`) that only fires when the two are
   siblings, not parent/child. Fixed by placing them as siblings inside a
   `.field-row`, per XP.css's own convention.
+- Release installers (`tunemeta-macos.dmg`, `tunemeta-windows.exe`,
+  `tunemeta-linux`) had the same filename on every release, so v1.0.1 and
+  v1.0.2 downloads were indistinguishable once saved to disk. Release
+  builds now embed the tag (`tunemeta-v1.0.2-macos.dmg`, etc.), falling
+  back to `dev` on manual `workflow_dispatch` runs that have no tag.
 
 ## 2026-09-12
 

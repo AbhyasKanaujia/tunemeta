@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Release installer filenames now include the version (e.g.
+  `tunemeta-v1.0.2-macos.dmg`) instead of a fixed name, so downloads from
+  different releases no longer look identical.
+
 ## [1.0.2] - 2026-09-12
 
 ### Added
