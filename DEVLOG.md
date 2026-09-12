@@ -4,6 +4,21 @@ Technical/internal notes on how this project has been built — not a
 user-facing changelog. See [CHANGELOG.md](CHANGELOG.md) for what's new
 from a user's perspective.
 
+## 2026-09-12 (4)
+
+- The v1.0.3 release (first built after c3b56d5, "Embed the version in
+  release installer filenames") broke the direct download links in
+  README.md and docs/index.html: they hit
+  `releases/latest/download/tunemeta-macos.dmg`, but the workflow now
+  only produces `tunemeta-v1.0.3-macos.dmg`, a 404. That commit renamed
+  the asset instead of also keeping a plain-named copy. Fixed
+  release.yml to `cp` (not `mv`) before renaming and upload both the
+  versioned and plain-named file for each platform, so per-release
+  filenames stay distinct *and* the stable "latest" links keep working.
+  Patched the already-published v1.0.3 release by hand (downloaded the
+  versioned assets, re-uploaded copies under the plain names) so it
+  doesn't need a re-cut.
+
 ## 2026-09-12 (3)
 
 - Fixed `CERTIFICATE_VERIFY_FAILED` on iTunes lookups/search and artwork

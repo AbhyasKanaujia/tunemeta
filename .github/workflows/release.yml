@@ -23,13 +23,17 @@ jobs:
       - run: brew install create-dmg
       - run: pip install -e ".[gui,build]"
       - run: bash packaging/build_macos.sh
-      - run: mv dist/tunemeta.dmg dist/tunemeta-${{ env.VERSION }}-macos.dmg
+      - run: cp dist/tunemeta.dmg dist/tunemeta-${{ env.VERSION }}-macos.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: tunemeta-macos
           path: dist/tunemeta-${{ env.VERSION }}-macos.dmg
+      # Uploads both a versioned copy (so saved downloads from different
+      # releases are distinguishable) and the plain-named one (so the
+      # releases/latest/download/tunemeta-macos.dmg links in README.md and
+      # docs/index.html keep working).
       - if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-${{ env.VERSION }}-macos.dmg
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-${{ env.VERSION }}-macos.dmg dist/tunemeta.dmg
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -42,13 +46,17 @@ jobs:
           python-version: "3.11"
       - run: pip install -e ".[gui,build]"
       - run: powershell -ExecutionPolicy Bypass -File packaging/build_windows.ps1
-      - run: move dist\tunemeta.exe dist\tunemeta-${{ env.VERSION }}-windows.exe
+      - run: copy dist\tunemeta.exe dist\tunemeta-${{ env.VERSION }}-windows.exe
       - uses: actions/upload-artifact@v4
         with:
           name: tunemeta-windows
           path: dist/tunemeta-${{ env.VERSION }}-windows.exe
+      # Uploads both a versioned copy (so saved downloads from different
+      # releases are distinguishable) and the plain-named one (so the
+      # releases/latest/download/tunemeta-windows.exe links in README.md and
+      # docs/index.html keep working).
       - if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-${{ env.VERSION }}-windows.exe
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-${{ env.VERSION }}-windows.exe dist/tunemeta.exe
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -66,12 +74,16 @@ jobs:
             libgirepository1.0-dev libcairo2-dev pkg-config python3-dev gcc
       - run: pip install -e ".[gui,build]" "pywebview[gtk]"
       - run: bash packaging/build_linux.sh
-      - run: mv dist/tunemeta dist/tunemeta-${{ env.VERSION }}-linux
+      - run: cp dist/tunemeta dist/tunemeta-${{ env.VERSION }}-linux
       - uses: actions/upload-artifact@v4
         with:
           name: tunemeta-linux
           path: dist/tunemeta-${{ env.VERSION }}-linux
+      # Uploads both a versioned copy (so saved downloads from different
+      # releases are distinguishable) and the plain-named one (so the
+      # releases/latest/download/tunemeta-linux link in README.md and
+      # docs/index.html keeps working).
       - if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-${{ env.VERSION }}-linux
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/tunemeta-${{ env.VERSION }}-linux dist/tunemeta
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
