@@ -12,9 +12,9 @@ Open a [feature request](https://github.com/AbhyasKanaujia/tunemeta/issues/new?t
 
 1. Fork the repo and clone it.
 2. `pip install -e ".[dev,gui]"` (add `,build` too if you want to test packaging).
-3. Make your change.
+3. Make your change. If it's user-facing, add an entry under `[Unreleased]` in [CHANGELOG.md](CHANGELOG.md) ([Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format).
 4. Run the tests: `pytest -v`.
-5. If you touched the desktop app, actually launch it (`tunemeta-gui` or `python -m tunemeta.gui`) and click through the change — the test suite doesn't cover the UI.
+5. If you touched the desktop app, actually launch it and click through the change — the test suite doesn't cover the UI. `python scripts/dev.py` restarts the app automatically whenever you save, instead of you doing it by hand.
 6. Open a pull request explaining what the change does and why.
 
 ### Where things live
@@ -24,6 +24,7 @@ Open a [feature request](https://github.com/AbhyasKanaujia/tunemeta/issues/new?t
 - `src/tunemeta/cli.py` — the `tunemeta` command line tool.
 - `src/tunemeta/gui.py` — the desktop app (pywebview + XP.css).
 - `packaging/` — PyInstaller build scripts for macOS/Windows/Linux; `.github/workflows/release.yml` runs them on every GitHub release.
+- `scripts/dev.py` — restarts the desktop app on file changes during development.
 
 ### Adding a provider
 

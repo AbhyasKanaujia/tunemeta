@@ -24,16 +24,18 @@ import io
 import json
 import os
 import sys
+import urllib.request
 from dataclasses import replace
 
 import webview
 from PIL import Image
 
-from tunemeta import artwork, tagging
+from tunemeta import __version__, artwork, tagging
 from tunemeta.models import TrackMetadata
 from tunemeta.providers import DEFAULT_PROVIDER, PROVIDERS
 
 EMBEDDED_ART_SIZE = 800
+RELEASES_API_URL = "https://api.github.com/repos/AbhyasKanaujia/tunemeta/releases/latest"
 
 # (TrackMetadata attribute, on-screen label) -- the fields a user can review
 # and correct before writing tags. Anything not listed here (track/disc
@@ -88,6 +90,18 @@ body {
 #fields .field-row-stacked { margin-top: 0; }
 
 .status-bar { flex: none; margin-top: 8px; }
+#versionField { flex: none; }
+#versionField a { color: #0046d5; }
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, .3);
+  display: flex; align-items: center; justify-content: center; z-index: 10;
+}
+.modal-overlay .window { width: 300px; }
+.about-body { display: flex; gap: 14px; }
+.about-body img { width: 48px; height: 48px; flex: none; }
+.about-body p { margin: 0 0 6px; }
+#updateStatus { font-size: 11px; margin-top: 8px; min-height: 14px; }
 </style>
 </head>
 <body>
@@ -143,6 +157,29 @@ body {
 
 <div class="status-bar">
   <p class="status-bar-field" id="status">Ready</p>
+  <p class="status-bar-field" id="versionField">tunemeta __APP_VERSION__ &middot; <a href="#" id="aboutLink">About</a></p>
+</div>
+
+<div id="aboutOverlay" class="modal-overlay hide">
+  <div class="window">
+    <div class="title-bar">
+      <div class="title-bar-text">About tunemeta</div>
+      <div class="title-bar-controls">
+        <button id="aboutCloseBtn" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="window-body about-body">
+      <img src="__ICON_DATA_URL__" alt="">
+      <div>
+        <p><strong>tunemeta</strong></p>
+        <p>Version __APP_VERSION__</p>
+        <div class="field-row">
+          <button id="checkUpdatesBtn">Check for Updates</button>
+        </div>
+        <p id="updateStatus"></p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -240,6 +277,31 @@ window.addEventListener('pywebviewready', () => {
   browseBtn.disabled = false;
 });
 
+el('aboutLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  el('updateStatus').textContent = '';
+  show('aboutOverlay');
+});
+el('aboutCloseBtn').addEventListener('click', () => hide('aboutOverlay'));
+
+el('checkUpdatesBtn').addEventListener('click', async () => {
+  const btn = el('checkUpdatesBtn');
+  const statusEl = el('updateStatus');
+  btn.disabled = true;
+  statusEl.textContent = 'Checking…';
+  const data = await window.pywebview.api.check_for_updates();
+  btn.disabled = false;
+  if (!data.ok) {
+    statusEl.textContent = "Couldn't check for updates.";
+    return;
+  }
+  if (data.update_available) {
+    statusEl.innerHTML = `Version ${data.latest_version} is available &mdash; <a href="${data.url}">Download</a>`;
+  } else {
+    statusEl.textContent = "You're up to date.";
+  }
+});
+
 browseBtn.addEventListener('click', async () => {
   const result = await window.pywebview.api.browse_file();
   if (!result) return;
@@ -311,9 +373,13 @@ def _to_data_url(data: bytes, mime: str) -> str:
 def _render_page() -> str:
     with open(_asset_path("xp.css"), encoding="utf-8") as f:
         xp_css = f.read()
+    with open(_asset_path("icon.png"), "rb") as f:
+        icon_data_url = _to_data_url(f.read(), "image/png")
 
     return (
         PAGE_HTML.replace("__XP_CSS__", xp_css)
+        .replace("__ICON_DATA_URL__", icon_data_url)
+        .replace("__APP_VERSION__", __version__)
         .replace("__FIELDS_JSON__", json.dumps(EDITABLE_FIELDS))
         .replace("__PROVIDERS_JSON__", json.dumps(sorted(PROVIDERS)))
         .replace("__DEFAULT_PROVIDER__", DEFAULT_PROVIDER)
@@ -395,6 +461,14 @@ def _new_artwork_info(artwork_jpeg: bytes | None) -> tuple[str | None, str | Non
     return _to_data_url(artwork_jpeg, "image/jpeg"), _format_size(len(artwork_jpeg)), _image_dimensions(artwork_jpeg)
 
 
+def _version_tuple(version: str) -> tuple[int, ...]:
+    parts = []
+    for piece in version.split("."):
+        digits = "".join(ch for ch in piece if ch.isdigit())
+        parts.append(int(digits) if digits else 0)
+    return tuple(parts)
+
+
 class Api:
     """The JS <-> Python bridge. One instance per window; state lives here,
     not in globals, because each window gets its own Api."""
@@ -403,6 +477,22 @@ class Api:
         self.window: webview.Window | None = None
         self._metadata: TrackMetadata | None = None
         self._artwork_jpeg: bytes | None = None
+
+    def check_for_updates(self) -> dict:
+        try:
+            request = urllib.request.Request(RELEASES_API_URL, headers={"Accept": "application/vnd.github+json"})
+            with urllib.request.urlopen(request, timeout=10) as resp:
+                release = json.loads(resp.read())
+            latest_version = release["tag_name"].lstrip("v")
+            return {
+                "ok": True,
+                "update_available": _version_tuple(latest_version) > _version_tuple(__version__),
+                "current_version": __version__,
+                "latest_version": latest_version,
+                "url": release.get("html_url", "https://github.com/AbhyasKanaujia/tunemeta/releases/latest"),
+            }
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
 
     def browse_file(self) -> dict | None:
         assert self.window is not None
