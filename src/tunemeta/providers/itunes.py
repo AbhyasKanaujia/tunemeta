@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 import re
 import urllib.parse
-import urllib.request
 
+from tunemeta import net
 from tunemeta.models import TrackMetadata
 from tunemeta.providers.base import Provider
 
@@ -60,7 +60,7 @@ class ITunesProvider(Provider):
         is_search = params.pop("_search", False)
         base_url = SEARCH_URL if is_search else LOOKUP_URL
         url = base_url + "?" + urllib.parse.urlencode(params)
-        with urllib.request.urlopen(url, timeout=10) as resp:
+        with net.urlopen(url, timeout=10) as resp:
             data = json.load(resp)
         if not data.get("resultCount"):
             raise LookupError(f"No iTunes results for {params}")

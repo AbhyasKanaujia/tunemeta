@@ -4,6 +4,18 @@ Technical/internal notes on how this project has been built — not a
 user-facing changelog. See [CHANGELOG.md](CHANGELOG.md) for what's new
 from a user's perspective.
 
+## 2026-09-12 (3)
+
+- Fixed `CERTIFICATE_VERIFY_FAILED` on iTunes lookups/search and artwork
+  downloads. `urlopen()` was using the interpreter's default SSL context,
+  which trusts whatever root certs the OS has linked in — a link that's
+  often missing, and always missing in the PyInstaller-built `.app`,
+  which doesn't inherit the system keychain at all. Added `net.py` with
+  a shared SSL context pinned to `certifi`'s CA bundle, and routed the
+  three `urlopen` call sites (itunes.py, artwork.py, gui.py's update
+  check) through it. PyInstaller already ships a hook that bundles
+  certifi's `cacert.pem`, so no packaging changes were needed.
+
 ## 2026-09-12 (2)
 
 - Added the rename-on-write checkbox and `tagging.sensible_filename()`.

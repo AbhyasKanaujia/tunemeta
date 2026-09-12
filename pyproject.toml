@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tunemeta"
-version = "1.0.2"
+version = "1.0.3"
 description = "Look up clean, accurate ID3 metadata and cover art for a song and write it straight into your MP3s."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -21,6 +21,7 @@ classifiers = [
 dependencies = [
     "mutagen>=1.47",
     "Pillow>=10.0",
+    "certifi>=2024.2.2",
 ]
 
 [project.urls]

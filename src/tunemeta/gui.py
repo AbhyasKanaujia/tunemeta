@@ -30,7 +30,7 @@ from dataclasses import replace
 import webview
 from PIL import Image
 
-from tunemeta import __version__, artwork, tagging
+from tunemeta import __version__, artwork, net, tagging
 from tunemeta.models import TrackMetadata
 from tunemeta.providers import DEFAULT_PROVIDER, PROVIDERS
 
@@ -510,7 +510,7 @@ class Api:
     def check_for_updates(self) -> dict:
         try:
             request = urllib.request.Request(RELEASES_API_URL, headers={"Accept": "application/vnd.github+json"})
-            with urllib.request.urlopen(request, timeout=10) as resp:
+            with net.urlopen(request, timeout=10) as resp:
                 release = json.loads(resp.read())
             latest_version = release["tag_name"].lstrip("v")
             return {

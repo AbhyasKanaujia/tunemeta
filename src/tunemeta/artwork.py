@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import io
-import urllib.request
 
 from PIL import Image
+
+from tunemeta import net
 
 MAX_REASONABLE_SIZE = 1200  # embedding larger than this bloats file size for little visible gain
 
 
 def fetch(url: str) -> bytes:
     """Download raw image bytes from a URL."""
-    with urllib.request.urlopen(url, timeout=15) as resp:
+    with net.urlopen(url, timeout=15) as resp:
         return resp.read()
 
 
